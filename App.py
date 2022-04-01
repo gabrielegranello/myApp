@@ -24,7 +24,7 @@ A_w=290736*2/3; # Shear area
 I_w=7.56945684e+11;
 d_gap=0; # gap opening
 
-# import experimental data
+# import experimental data-
 headers=['SW_noLoad_d1','SW_noLoad_F1','SW_noLoad_d2','SW_noLoad_F2','SW_Load_d','SW_Load_F','WW_noLoad_d','WW_noLoad_F','WW_Load_d','WW_Load_F']
 exp_data=pd.read_excel("Data_resume.xlsx",skiprows=(1),usecols=range(1,11),names=headers,sheet_name='fD');
 
