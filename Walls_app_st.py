@@ -54,9 +54,9 @@ with st.container():
     column_values_list=update_column_values(column_keys_list);
 
 
-    if 'vload_expander_state' not in st.session_state:
-        st.session_state['vload_expander_state'] = False;
-    expander_vertical_load=st.expander("Vertical load:",expanded=st.session_state['vload_expander_state'])
+    # if 'vload_expander_state' not in st.session_state:
+    #     st.session_state['vload_expander_state'] = True;
+    expander_vertical_load=st.expander("Vertical load:",expanded=True)
     with expander_vertical_load:
 
         vl_1,vl_2,vl_3,vl_4=st.columns(4); # divide the space into columns
@@ -81,7 +81,7 @@ with st.container():
 
         vload_values_list=update_vload_values(vload_keys_list);
 
-    with st.expander("Hold down connectors:"):
+    with st.expander("Hold down connectors:",expanded=True):
         st.write('Stiffness (kN/m)')
         hd_1k,hd_2k,hd_3k,hd_4k=st.columns(4); # divide the space into columns
         hd_5k,hd_6k,hd_7k,hd_8k=st.columns(4); # divide the space into columns
@@ -129,7 +129,7 @@ with st.container():
 
         hd_c_values_list=update_hdc_values(hd_c_keys_list);
 
-    with st.expander("Shear connectors:"):
+    with st.expander("Shear connectors:",expanded=True):
         st.write('Stiffness (kN/m)')
         sc_12k,sc_23k,sc_34k,sc_45k=st.columns(4); # divide the space into columns
         sc_56k,sc_67k,sc_78k,sc_89k=st.columns(4); # divide the space into columns
@@ -488,22 +488,17 @@ with st.container():
     cc_1_value=cc_1.number_input("Stiffness modifier (-)",value=1.,key="cc_1_key"); # calibration coefficient
     theta_max_value=theta_max.number_input("Theta max (rad)",value=0.025,key="theta_max_key"); # calibration coefficient
 
-    st.write(st.session_state.vl_1_key)
     analysis_button = st.button('Run analysis'); # create button analysis
 
-
-    if analysis_button:
+    if analysis_button():
         # update all the values
-        st.write(st.session_state.vl_1_key)
+        st.write(st.session_state)
         column_values_list=update_column_values(column_keys_list);
         vload_values_list=update_vload_values(vload_keys_list);
         hd_k_values_list=update_hdk_values(hd_k_keys_list);
         hd_c_values_list=update_hdc_values(hd_c_keys_list);
         sc_k_values_list=update_sck_values(sc_k_keys_list);
         sc_c_values_list=update_scc_values(sc_c_keys_list);
-
-
-
 
         d_h,f_h,L_list,d_v,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear=calculate_pushover_and_failing_indeces(cc_1_value,hd_k_values_list[::-1],sc_k_values_list[::-1],vload_values_list[::-1],d_column,H,E_w_value,G_w_value,A_w_value,I_w_value,theta_max_value,hd_c_values_list[::-1],sc_c_values_list[::-1]);
 
@@ -528,7 +523,12 @@ with st.container():
         "F holdown 1 (kN)":np.array(f_holddown).T[-1].tolist(), "F holdown 2 (kN)":np.array(f_holddown).T[-2].tolist(),
         "F holdown 3 (kN)":np.array(f_holddown).T[-3].tolist(),"F holdown 4 (kN)":np.array(f_holddown).T[-4].tolist(),
         "F holdown 5  (kN)":np.array(f_holddown).T[-5].tolist(),"F holdown 6 (kN)":np.array(f_holddown).T[-6].tolist(),
-        "F holdown 7  (kN)":np.array(f_holddown).T[-7].tolist(),"F holdown 8 (kN)":np.array(f_holddown).T[-8].tolist()})
+        "F holdown 7  (kN)":np.array(f_holddown).T[-7].tolist(),"F holdown 8 (kN)":np.array(f_holddown).T[-8].tolist(),
+        "F shear 1-2 (kN)":np.array(f_shear).T[-1].tolist(), "F shear 2-3 (kN)":np.array(f_shear).T[-2].tolist(),
+        "F shear 3-4 (kN)":np.array(f_shear).T[-3].tolist(),"F shear 4-5 (kN)":np.array(f_shear).T[-4].tolist(),
+        "F shear 5-6  (kN)":np.array(f_shear).T[-5].tolist(),"F shear 6-7 (kN)":np.array(f_shear).T[-6].tolist(),
+        "F shear 7-8  (kN)":np.array(f_shear).T[-7].tolist()
+        })
 
         download_button = st.download_button(
          label="Download data as CSV",
