@@ -56,7 +56,7 @@ with st.container():
 
     # if 'vload_expander_state' not in st.session_state:
     #     st.session_state['vload_expander_state'] = True;
-    expander_vertical_load=st.expander("Vertical load:",expanded=True)
+    expander_vertical_load=st.expander("Vertical load:")
     with expander_vertical_load:
 
         vl_1,vl_2,vl_3,vl_4=st.columns(4); # divide the space into columns
@@ -81,7 +81,7 @@ with st.container():
 
         vload_values_list=update_vload_values(vload_keys_list);
 
-    with st.expander("Hold down connectors:",expanded=True):
+    with st.expander("Hold down connectors:"):
         st.write('Stiffness (kN/m)')
         hd_1k,hd_2k,hd_3k,hd_4k=st.columns(4); # divide the space into columns
         hd_5k,hd_6k,hd_7k,hd_8k=st.columns(4); # divide the space into columns
@@ -129,7 +129,7 @@ with st.container():
 
         hd_c_values_list=update_hdc_values(hd_c_keys_list);
 
-    with st.expander("Shear connectors:",expanded=True):
+    with st.expander("Shear connectors:"):
         st.write('Stiffness (kN/m)')
         sc_12k,sc_23k,sc_34k,sc_45k=st.columns(4); # divide the space into columns
         sc_56k,sc_67k,sc_78k,sc_89k=st.columns(4); # divide the space into columns
