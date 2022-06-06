@@ -490,9 +490,9 @@ with st.container():
 
     analysis_button = st.button('Run analysis'); # create button analysis
 
-    if analysis_button():
+    if analysis_button:
         # update all the values
-        st.write(st.session_state)
+        #st.write(st.session_state)
         column_values_list=update_column_values(column_keys_list);
         vload_values_list=update_vload_values(vload_keys_list);
         hd_k_values_list=update_hdk_values(hd_k_keys_list);
