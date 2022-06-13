@@ -281,6 +281,7 @@ def calculate_pushover(calibration_factor,k_u_list,k_s_list,F_v_list,d_column,H,
 
     #%% create the epty lists to be filled
     d_h=[]; # horizontal displacement list
+    deforemation_tot=[]; # horizontal deformation list
     f_h=[]; # horizontal force list
     d_v=[]; # vertical displacement list
     f_holddown=[]; # force on the holdowns
@@ -304,7 +305,8 @@ def calculate_pushover(calibration_factor,k_u_list,k_s_list,F_v_list,d_column,H,
         shear_deformation=X[15]*1000*H/(G_w*A_w);
         bending_deformation=X[15]*1000*H/(2*E_w*I_w)
         d_h.append(t*H+shear_deformation+bending_deformation); # calculate the horizontal displacement
-    return d_h,f_h,L_list,d_v,f_holddown,f_shear;
+        deforemation_tot.append(shear_deformation+bending_deformation);
+    return d_h,f_h,L_list,d_v,f_holddown,f_shear,theta,deforemation_tot;
 
 #% The function checks wether a failure is occurred in the hold down connectors by comparing with the maximum allowable force--------------------------------------------
 def check_holdown_failures(f_holddown_list,f_failholdown_list):
@@ -344,7 +346,7 @@ def shearconnector_swapping(k):
 def calculate_pushover_and_failing_indeces(calibration_factors,k_u_list,k_s_list,F_v_list,d_column,H,E_w,G_w,A_w,I_w,theta_max_value,f_failholdown_list,f_failshear_list):
 
     # calling the calculate_pushover_function where d_h horizontal displacement, f_h horizontal force, L_list lever arm distances for the holdowns,d_v vertical displacements, f_holddown force in the holdowns,f_shear force in the shear connectors
-    d_h,f_h,L_list,d_v,f_holddown,f_shear=calculate_pushover(calibration_factors,k_u_list,k_s_list,F_v_list,d_column,H,E_w,G_w,A_w,I_w,theta_max_value);
+    d_h,f_h,L_list,d_v,f_holddown,f_shear,theta,deformation_tot=calculate_pushover(calibration_factors,k_u_list,k_s_list,F_v_list,d_column,H,E_w,G_w,A_w,I_w,theta_max_value);
     i_failure_holdowns=check_holdown_failures(np.array(f_holddown).transpose(),f_failholdown_list); # checkes whether a holdown failed
     i_fp_min=min(i_failure_holdowns); # check smallest value of holdown failing
     i_holdown_failing=np.argmin(i_failure_holdowns); # check what is the holdown failing: add one beacuse counting starts from zero
@@ -355,4 +357,67 @@ def calculate_pushover_and_failing_indeces(calibration_factors,k_u_list,k_s_list
     i_shear_failing=np.argmin(i_failure_shear); # check what is the shear connector failing: add one beacuse counting starts from zero
     i_shear_failing_swap=shearconnector_swapping(i_shear_failing); # swap for plotting purposes
 
-    return d_h,f_h,L_list,d_v,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear;
+    return d_h,deformation_tot,f_h,L_list,d_v,theta,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear;
+
+# the function returns the vertices of the deformed rigid block
+def deformed_shape_column(x_bottom,y_bottom,width,height,theta,deformation_tot,value):
+    # x_bottom,y_bottom coordinates of the centre of the base of the column, with and height of the column, theta angle and d_h horizontal dispalcement
+    if value=="W":
+        height=0.5*height; # if window, the height is half
+
+    x_v1=x_bottom-0.5*width*np.cos(theta); # first vertex X
+    y_v1=y_bottom+0.5*width*np.sin(theta); # first vertex Y
+
+    x_v2=x_bottom+0.5*width*np.cos(theta); # second vertex X
+    y_v2=y_bottom-0.5*width*np.sin(theta); # second vertex Y
+
+    x_top=x_bottom+height*np.sin(theta); # centre at the top of the column
+    y_top=y_bottom+height*np.cos(theta); # centre at the top of the column
+
+    x_v4=x_top-0.5*width*np.cos(theta)+deformation_tot; # first vertex X
+    y_v4=y_top+0.5*width*np.sin(theta); # first vertex Y
+
+    x_v3=x_top+0.5*width*np.cos(theta)+deformation_tot; # second vertex X
+    y_v3=y_top-0.5*width*np.sin(theta); # second vertex Y
+
+    if value=="D":
+        x_v1=y_v1=x_v2=y_v2=x_v3=y_v3=x_v4=y_v4=0;
+
+    return x_v1, y_v1, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4
+
+
+#create a function that plots the geometry--------------------------------------------
+def plot_deformed_shape(column_values_list,h_column,d_column,d_beam,x_bottom,y_bottom,theta,deformation_tot):
+    L_wall=len(column_values_list)*d_column; # length of the wall
+
+    fig,ax = plt.subplots()
+    polygonal_patches=[]; # define the empty list
+    # loop over the values and create the rectangular patches for plot
+    top_beam_coord=[];
+    for i,(x,y,value) in enumerate(zip(x_bottom[::-1],y_bottom,column_values_list[::-1])):
+        x_v1, y_v1, x_v2, y_v2, x_v3, y_v3, x_v4, y_v4 =deformed_shape_column(x,y,d_column,h_column,theta,deformation_tot,value); # calculate the verteces
+        coordinates=[[x_v1,y_v1],[x_v2,y_v2],[x_v3,y_v3],[x_v4,y_v4],]; # coordinates fo the deformed ploygon
+        polygonal_patches.append(patches.Polygon(coordinates, linewidth=1, edgecolor='k', facecolor='none'))
+        if i==0:
+            top_beam_coord.append([x_v3,y_v3]);
+        if i==len(x_bottom)-1:
+            top_beam_coord.append([x_v4,y_v4]);
+
+    #add points of the top beam to create the patch
+    for i,points in enumerate(top_beam_coord[::-1]):
+        x=points[0]; # extract x coordinate
+        y=points[1]; # extract y coordinate
+        x_top=x+d_beam*np.sin(theta); #calculate the top coordinate
+        y_top=y+d_beam*np.cos(theta);#calculate the top coordinate
+        top_beam_coord.append([x_top,y_top]);
+    polygonal_patches.append(patches.Polygon(top_beam_coord, linewidth=1, edgecolor='k', facecolor='none'))
+
+
+
+    for patch in polygonal_patches:
+        ax.add_patch(patch); # add the column patches ot the image.
+
+    ax.set_xlim(-d_beam*3,len(column_values_list)*d_column+d_column);
+    ax.set_ylim(-d_beam,h_column+2*d_beam)
+
+    return fig

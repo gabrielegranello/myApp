@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from Walls_app_functions import *
+from PIL import Image
 
 # Intial variables
 h_column=2400; # height  of the column
@@ -25,7 +26,8 @@ H=h_column+d_beam*0.5; # distance form the horizontal force to the bottom beam
 with st.container():
     st.title("Skylark walls - Web app")
     st.header("What is it?")
-    st.write("A web based app to calculate the lateral force vs displacement response of Skylark walls.")
+    st.write("A web based app to calculate the lateral force vs displacement response of Skylark walls based on a simple analytical model.")
+    st.image(Image.open('wall_mechanical_model.jpg'))
     st.write(" The details of the undelining mechanical model can be found here https://doi.org/10.31224/2266.")
     st.write("Choose one of the tested configurations or manually configure the wall.")
 
@@ -500,24 +502,31 @@ with st.container():
         sc_k_values_list=update_sck_values(sc_k_keys_list);
         sc_c_values_list=update_scc_values(sc_c_keys_list);
 
-        d_h,f_h,L_list,d_v,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear=calculate_pushover_and_failing_indeces(cc_1_value,hd_k_values_list[::-1],sc_k_values_list[::-1],vload_values_list[::-1],d_column,H,E_w_value,G_w_value,A_w_value,I_w_value,theta_max_value,hd_c_values_list[::-1],sc_c_values_list[::-1]);
+        d_h,deformation_tot,f_h,L_list,d_v,theta,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear=calculate_pushover_and_failing_indeces(cc_1_value,hd_k_values_list[::-1],sc_k_values_list[::-1],vload_values_list[::-1],d_column,H,E_w_value,G_w_value,A_w_value,I_w_value,theta_max_value,hd_c_values_list[::-1],sc_c_values_list[::-1]);
 
         # call the function to plot the results
-        fig1,fig2,fig3,fig4=results_plot(d_h,f_h,L_list,d_v,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear,exp_SW_noLoad_key,exp_SW_Load_key,exp_WW_noLoad_key,exp_WW_Load_key,exp_data,exp_data_dic);
-        st.write("Force displacement response")
+
+        fig1=plot_deformed_shape(column_values_list,h_column,d_column,d_beam,L_list,d_v[i_fp_min],theta[i_fp_min],deformation_tot[i_fp_min]);
+        fig2,fig3,fig4,fig5=results_plot(d_h,f_h,L_list,d_v,f_holddown,f_shear,i_fp_min,i_holdown_failing_swap,i_fshear_min,i_shear_failing_swap,i_failure_holdowns,i_failure_shear,exp_SW_noLoad_key,exp_SW_Load_key,exp_WW_noLoad_key,exp_WW_Load_key,exp_data,exp_data_dic);
+
+        st.write("Deformed shape")
         st.pyplot(fig1)
 
         st.write("")
-        st.write("Hold down forces")
+        st.write("Force displacement response")
         st.pyplot(fig2)
 
         st.write("")
-        st.write("Shear forces")
+        st.write("Hold down forces")
         st.pyplot(fig3)
 
         st.write("")
-        st.write("Vertical displacements at failure")
+        st.write("Shear forces")
         st.pyplot(fig4)
+
+        st.write("")
+        st.write("Vertical displacements at failure")
+        st.pyplot(fig5)
 
         results_dataframe=pd.DataFrame({"Horizontal displacement (mm)":d_h,"Horizontal Force (kN)":f_h,
         "F holdown 1 (kN)":np.array(f_holddown).T[-1].tolist(), "F holdown 2 (kN)":np.array(f_holddown).T[-2].tolist(),
